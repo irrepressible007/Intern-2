@@ -1,0 +1,9 @@
+# Ignore all node_modules folders in any sub-project
+**/node_modules
+
+# Ignore all .env files in any sub-project
+**/.env
+
+# Ignore compiled output
+**/dist
+**/.DS_Store
