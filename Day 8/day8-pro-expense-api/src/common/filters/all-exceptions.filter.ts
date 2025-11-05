@@ -17,41 +17,50 @@ export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const { httpAdapter } = this.httpAdapterHost;
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest(); // Get the request object
+    const response = ctx.getResponse();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
 
+    // --- Task 8: Add requestId to logs ---
+    // This looks for a request ID set by a firewall, load balancer,
+    // or (in a more advanced setup) a request-id middleware.
+    const requestId = request.id || request.headers['x-request-id'];
+    const logMessage = `[RequestID: ${requestId || 'N/A'}]`;
+    // ------------------------------------
+
     // Handle Mongoose/Mongo Errors
     if (exception instanceof Error) {
-      this.logger.error(exception.message, exception.stack);
+      // Log the full error with stack and requestId
+      this.logger.error(`${logMessage} ${exception.message}`, exception.stack);
       
-      // --- THIS IS THE FIX ---
-      // Task 9: Mongo E11000 => 409 Conflict
       if (exception.message.includes('E11000 duplicate key error')) {
         statusCode = HttpStatus.CONFLICT;
-        // Use a more generic (and correct) message
+        // This is a generic message, but we've handled specifics in the services.
         message = 'A resource with these unique properties already exists.';
       }
-      // -------------------------
       
-      // Task 9: CastError/ObjectId => 400 Bad Request
       else if (exception.name === 'CastError') {
         statusCode = HttpStatus.BAD_REQUEST;
         message = `Invalid ID format provided.`;
       }
     }
 
-    // Handle NestJS HTTP Exceptions (like 404 Not Found or 400 Validation)
+    // Handle NestJS HTTP Exceptions (like 404, 401, 400)
     if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
-      const response = exception.getResponse();
+      const exceptionResponse = exception.getResponse();
       
       // This handles class-validator's array of messages
-      if (typeof response === 'object' && response !== null && (response as any).message) {
-        message = (response as any).message;
+      if (typeof exceptionResponse === 'object' && exceptionResponse !== null && (exceptionResponse as any).message) {
+        message = (exceptionResponse as any).message;
       } else {
         message = exception.message;
       }
+      
+      // Log the HTTP exception
+      this.logger.warn(`${logMessage} ${statusCode} ${request.method} ${request.url} - ${JSON.stringify(message)}`);
     }
 
     const responseBody = {
@@ -59,9 +68,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode,
       message,
       timestamp: new Date().toISOString(),
-      path: httpAdapter.getRequestUrl(ctx.getRequest()),
+      path: httpAdapter.getRequestUrl(request),
     };
 
-    httpAdapter.reply(ctx.getResponse(), responseBody, statusCode);
+    httpAdapter.reply(response, responseBody, statusCode);
   }
 }

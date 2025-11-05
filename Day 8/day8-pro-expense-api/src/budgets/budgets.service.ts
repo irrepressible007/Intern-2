@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common'; // <-- 1. Import
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -21,24 +21,24 @@ export class BudgetsService {
 
     const createdBudget = new this.budgetModel(budgetData);
     
+    // --- 2. Add try...catch block ---
     try {
-      // .save() returns the full document, so Promise<Budget> is correct here
       return await createdBudget.save();
     } catch (error) {
+      // Task 8: Domain-specific error code
+      if (error.code === 11000) {
+        throw new ConflictException('A budget for this month and category combination already exists.');
+      }
       throw error;
     }
   }
 
-  // FIX: Removed explicit : Promise<Budget[]> return type
+  // ... (rest of the service: findAll, findOne, update, remove) ...
+  
   async findAll(queryDto: QueryBudgetDto, userId: string) {
     const { month } = queryDto;
+    const filter: FilterQuery<BudgetDocument> = { userId, month };
 
-    const filter: FilterQuery<BudgetDocument> = {
-      userId,
-      month,
-    };
-
-    // .lean() and .populate() create a type mismatch, so we infer it.
     return this.budgetModel
       .find(filter)
       .populate<{ categoryId: { name: string; slug: string } }>({
@@ -49,7 +49,6 @@ export class BudgetsService {
       .exec();
   }
 
-  // FIX: Removed explicit : Promise<Budget> return type
   async findOne(id: string, userId: string) {
     const budget = await this.budgetModel
       .findOne({ _id: id, userId })
@@ -59,39 +58,42 @@ export class BudgetsService {
       })
       .lean()
       .exec();
-
     if (!budget) {
       throw new NotFoundException(`Budget not found`);
     }
-    return budget; // Type is now inferred and correct
+    return budget;
   }
 
-  // FIX: Removed explicit : Promise<Budget> return type
   async update(id: string, updateBudgetDto: UpdateBudgetDto, userId: string) {
-    const updatedBudget = await this.budgetModel
-      .findOneAndUpdate(
-        { _id: id, userId },
-        updateBudgetDto,
-        { new: true },
-      )
-      .populate<{ categoryId: { name: string; slug: string } }>({
-        path: 'categoryId',
-        select: 'name slug',
-      })
-      .lean()
-      .exec();
-
-    if (!updatedBudget) {
-      throw new NotFoundException(`Budget not found`);
+    try {
+      const updatedBudget = await this.budgetModel
+        .findOneAndUpdate(
+          { _id: id, userId },
+          updateBudgetDto,
+          { new: true },
+        )
+        .populate<{ categoryId: { name: string; slug: string } }>({
+          path: 'categoryId',
+          select: 'name slug',
+        })
+        .lean()
+        .exec();
+      if (!updatedBudget) {
+        throw new NotFoundException(`Budget not found`);
+      }
+      return updatedBudget;
+    } catch (error) {
+      if (error.code === 11000) {
+        throw new ConflictException('A budget for this month and category combination already exists.');
+      }
+      throw error;
     }
-    return updatedBudget; // Type is now inferred and correct
   }
 
   async remove(id: string, userId: string) {
     const result = await this.budgetModel
       .deleteOne({ _id: id, userId })
       .exec();
-
     if (result.deletedCount === 0) {
       throw new NotFoundException(`Budget not found`);
     }

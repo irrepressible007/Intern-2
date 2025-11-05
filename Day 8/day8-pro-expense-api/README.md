@@ -1,98 +1,79 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Day 8: Advanced Expense Management API (Pro Features)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This project is a complete, secure, and multi-tenant Expense Management API built with NestJS and MongoDB. It implements all features from the Day 8 task list, including JWT authentication, user-scoped data, budgeting, recurring expenses, advanced reporting, and file uploads.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## ✨ Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+* **Authentication:** Full JWT (stateless) authentication with `signup` and `login`.
+* **User Scoping:** All data (`categories`, `expenses`, `budgets`) is 100% scoped to the logged-in user.
+* **Categories:** CRUD with soft-delete, audit fields, and case-insensitive unique slugs per user.
+* **Expenses:** CRUD with soft-delete, advanced filtering (`month`, `category`, `search`, `amount`), and receipt linking.
+* **Recurring Expenses:** A CRON job (`@nestjs/schedule`) runs daily to create concrete expenses from user-defined templates (e.g., "Monthly Netflix Bill").
+* **Budgets:** Users can set monthly budgets, either overall or per-category.
+* **Advanced Reports:**
+    * `GET /reports/summary`: A powerful aggregation (`$facet`) showing monthly total, category breakdowns, budget comparisons, and overrun alerts.
+    * `GET /reports/trend`: A time-series report showing spending over multiple months.
+* **File Uploads:** Secure `POST /uploads/receipt` endpoint using Multer for (image/pdf) receipts, with validation for file size (3MB) and MIME type.
+* **Global Architecture:**
+    * **Response Wrapping:** `TransformInterceptor` wraps all success responses in `{ success: true, data: ... }`.
+    * **Global Error Handling:** `AllExceptionsFilter` catches all errors and formats them into a clean `{ success: false, ... }` response.
+    * **Global Validation:** `ValidationPipe` (with `whitelist` and `forbidNonWhitelisted`) runs on all DTOs.
+    * **Global Security:** A global `JwtAuthGuard` protects all endpoints, except for `@Public()` routes (`/auth/login`, `/auth/signup`).
+* **Documentation:** Full API documentation automatically generated with Swagger at `/docs`.
 
-## Project setup
+---
 
+## 🚀 Getting Started
+
+### 1. Prerequisites
+* Node.js (v18+)
+* `pnpm` (or `npm`/`yarn`)
+* MongoDB Server (running locally on `127.0.0.1:27017`)
+
+### 2. Installation & Setup
+
+1.  **Clone the repository:**
+    *(If you are the reviewer, you've already done this)*
+
+2.  **Navigate to the project folder:**
+    ```bash
+    cd "Day 8/day8-pro-expense-api"
+    ```
+
+3.  **Install dependencies:**
+    ```bash
+    pnpm install
+    ```
+
+4.  **Set up Environment File:**
+    Create a `.env` file in the root of the `day8-pro-expense-api` folder and paste the following:
+    ```env
+    MONGO_URI=mongodb://127.0.0.1:27017/day8_pro_db
+    JWT_SECRET=mySuperSecretKeyForDay8
+    JWT_EXPIRES_IN=15m
+    ```
+
+5.  **Start the Database:**
+    Make sure your local MongoDB server is running. (Check your Windows "Services" app for "MongoDB Server" and ensure it is "Running").
+
+6.  **Run the Application:**
+    ```bash
+    pnpm run start:dev
+    ```
+    The API will be live at `http://127.0.0.1:3000`.
+
+---
+
+## 🧪 How to Test & Verify
+
+### 1. API Documentation (Swagger)
+
+The easiest way to see all endpoints is to visit:
+**`http://127.0.0.1:3000/docs`**
+
+### 2. Database Seeding (Recommended First Step)
+
+To fill the database with a test user, categories, expenses, and budgets, run the seed script:
 ```bash
-$ pnpm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

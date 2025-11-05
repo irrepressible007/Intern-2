@@ -1,23 +1,23 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 
-@Schema({ _id: false }) // This tells Mongoose not to create a separate _id for this embedded document
+@Schema({ _id: false }) // _id: false = this is an embedded document
 export class Receipt {
   @ApiProperty()
   @Prop({ required: true })
-  fileId: string; 
+  fileId: string; // The filename (e.g., receipt-12345.png)
 
   @ApiProperty()
   @Prop({ required: true })
-  url: string; // The URL returned by the upload API
+  url: string; // The public URL (e.g., /uploads/receipt-12345.png)
 
   @ApiProperty()
   @Prop({ required: true })
-  mime: string; 
+  mime: string; // e.g., 'image/png'
 
   @ApiProperty()
   @Prop({ required: true })
-  size: number;
+  size: number; // Size in bytes
 }
 
 export const ReceiptSchema = SchemaFactory.createForClass(Receipt);

@@ -4,7 +4,7 @@ import { Category } from 'src/categories/schemas/category.schema';
 import { User } from 'src/users/schemas/user.schema';
 import { RecurringExpense } from 'src/recurring-expenses/schemas/recurring-expense.schema';
 import { PaymentMethod } from './payment-method.enum';
-import { Receipt, ReceiptSchema } from './receipt.schema'; // <-- 1. Import Receipt Schema
+import { Receipt, ReceiptSchema } from './receipt.schema'; // <-- 1. Import Sub-Schema
 
 export type ExpenseDocument = HydratedDocument<Expense>;
 
@@ -38,8 +38,8 @@ export class Expense {
   note?: string;
   
   @Prop({ 
-    type: String, 
-    enum: Object.values(PaymentMethod), 
+    type: String,
+    enum: Object.values(PaymentMethod),
     default: PaymentMethod.OTHER,
     index: true,
   })
@@ -49,7 +49,7 @@ export class Expense {
   tags: string[];
   
   // --- Task 7: Receipt Field ---
-  @Prop({ type: ReceiptSchema, default: null }) // <-- 2. Add embedded Receipt
+  @Prop({ type: ReceiptSchema, default: null }) // <-- 2. Add embedded Receipt field
   receipt: Receipt | null;
   // -------------------------
 
@@ -61,20 +61,23 @@ export class Expense {
   })
   recurringExpenseId: RecurringExpense | null;
 
-  // ... (Soft Delete Fields)
+  // --- Soft Delete Fields ---
   @Prop({ default: false, select: false })
   isDeleted: boolean;
+
   @Prop({ type: Date, default: null, select: false })
   deletedAt: Date | null;
+  
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', default: null, select: false })
   deletedBy: MongooseSchema.Types.ObjectId | null; 
+  
   @Prop({ type: String, default: null, select: false })
   deleteReason: string | null;
 }
 
 export const ExpenseSchema = SchemaFactory.createForClass(Expense);
 
-// Indexes 
+// Indexes
 ExpenseSchema.index({ recurringExpenseId: 1, date: 1 }, { unique: true, sparse: true });
 ExpenseSchema.index({ userId: 1, date: -1 });
 

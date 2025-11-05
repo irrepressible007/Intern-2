@@ -1,9 +1,9 @@
 import {
   Controller,
   Get,
-  Post,
+  Post, 
   Body,
-  Patch,
+  Patch, 
   Param,
   Delete,
   Put,
@@ -13,33 +13,32 @@ import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { DeleteCategoryDto } from './dto/delete-category.dto';
-import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
-import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
+import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth } from '@nestjs/swagger'; 
+import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe'; 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-// FIX: Use 'import type' for the ReqUser interface
-import { User, type ReqUser } from 'src/auth/user.decorator'; 
+import { User, type ReqUser } from 'src/auth/user.decorator';
 
 @ApiTags('categories')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('categories')
-export class CategoriesController {
+@Controller('categories') 
+export class CategoriesController { // <-- The 'export' is here
   constructor(private readonly categoriesService: CategoriesService) {}
 
-  @Post()
+  @Post() 
   @ApiOperation({ summary: 'Create a new category (User-Scoped)' })
   create(
     @Body() createCategoryDto: CreateCategoryDto,
     @User() user: ReqUser, // <-- Inject user
   ) {
-    // FIX: Pass user.userId to the service
+    // Pass userId to the service
     return this.categoriesService.create(createCategoryDto, user.userId);
   }
 
-  @Get()
+  @Get() 
   @ApiOperation({ summary: 'Get all active categories (User-Scoped)' })
   findAll(@User() user: ReqUser) { // <-- Inject user
-    // FIX: Pass user.userId to the service
+    // Pass userId to the service
     return this.categoriesService.findAll(user.userId);
   }
 
@@ -49,18 +48,18 @@ export class CategoriesController {
     @Param('id', MongoIdPipe) id: string,
     @User() user: ReqUser, // <-- Inject user
   ) {
-    // FIX: Pass user.userId to the service
+    // Pass userId to the service
     return this.categoriesService.findOne(id, user.userId);
   }
 
-  @Patch(':id')
+  @Patch(':id') 
   @ApiOperation({ summary: 'Update a category by ID (User-Scoped)' })
   update(
     @Param('id', MongoIdPipe) id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
     @User() user: ReqUser, // <-- Inject user
   ) {
-    // FIX: Pass user.userId to the service
+    // Pass userId to the service
     return this.categoriesService.update(id, updateCategoryDto, user.userId);
   }
 
@@ -72,7 +71,7 @@ export class CategoriesController {
     @User() user: ReqUser, // <-- Inject user
     @Body() deleteCategoryDto: DeleteCategoryDto,
   ) {
-    // FIX: Pass user.userId to the service
+    // Pass userId to the service
     return this.categoriesService.remove(id, deleteCategoryDto, user.userId);
   }
 
@@ -82,7 +81,7 @@ export class CategoriesController {
     @Param('id', MongoIdPipe) id: string,
     @User() user: ReqUser, // <-- Inject user
   ) {
-    // FIX: Pass user.userId to the service
+    // Pass userId to the service
     return this.categoriesService.restore(id, user.userId);
   }
 }

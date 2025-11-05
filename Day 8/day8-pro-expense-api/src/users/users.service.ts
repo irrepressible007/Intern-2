@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common'; // <-- 1. Import ConflictException
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -14,15 +14,23 @@ export class UsersService {
    */
   async create(createUserDto: CreateUserDto): Promise<User> {
     const createdUser = new this.userModel(createUserDto);
-    // The pre-save hook in the schema will hash the password
-    return createdUser.save();
+    
+    // --- 2. Add try...catch block ---
+    try {
+      return await createdUser.save();
+    } catch (error) {
+      // Task 8: Domain-specific error code
+      if (error.code === 11000) {
+        throw new ConflictException('Email already in use.');
+      }
+      throw error;
+    }
   }
 
   /**
    * Used for the login process in AuthService to find a user by their email
    */
   async findOneByEmail(email: string): Promise<User | null> {
-    // We must explicitly select the password, since it's hidden by default
     return this.userModel.findOne({ email }).select('+password').lean().exec();
   }
 

@@ -28,12 +28,10 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
-    // Task 7: Serve static files securely (only via a protected endpoint in a real app)
+    // Task 7: Serve static files from the 'uploads' folder
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      rootPath: join(__dirname, '..', '..', 'uploads'), // Path to 'uploads' folder
       serveRoot: '/uploads', // Map local folder to /uploads URL path
-      // IMPORTANT: In a real app, this module would be wrapped in a conditional guard 
-      // or the files served via a controlled endpoint to ensure security.
     }),
     CategoriesModule,
     ExpensesModule,

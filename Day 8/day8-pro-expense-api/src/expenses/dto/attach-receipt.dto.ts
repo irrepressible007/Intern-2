@@ -3,23 +3,23 @@ import { IsNotEmpty, IsNumber, IsString, ValidateNested, IsOptional } from 'clas
 import { Type } from 'class-transformer';
 
 // DTO representing the receipt data structure (must match receipt.schema.ts)
-export class ReceiptDto {
-  @ApiProperty({ description: 'Unique file ID returned by the upload endpoint', example: 'receipt-169803e5d0a66c659621f86.pdf' })
+class ReceiptDto {
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   fileId: string; 
 
-  @ApiProperty({ description: 'Public URL to access the file', example: '/uploads/receipt-169803e5d0a66c659621f86.pdf' })
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   url: string;
 
-  @ApiProperty({ description: 'MIME type (e.g., application/pdf)', example: 'application/pdf' })
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   mime: string;
 
-  @ApiProperty({ description: 'File size in bytes', example: 125000 })
+  @ApiProperty()
   @IsNumber()
   @IsNotEmpty()
   size: number;
@@ -27,12 +27,13 @@ export class ReceiptDto {
 
 // DTO for the body of the PUT request
 export class AttachReceiptDto {
+    // This allows the client to send either the full object OR null (to remove the receipt)
     @ApiPropertyOptional({ 
         type: ReceiptDto, 
-        description: 'Receipt metadata object. Send null to remove the receipt.' 
+        description: 'Receipt metadata object. Send { "receipt": null } to remove.' 
     })
     @IsOptional()
-    @ValidateNested() 
-    @Type(() => ReceiptDto) 
+    @ValidateNested() // Tell the validator to check the nested object
+    @Type(() => ReceiptDto) // Tell the transformer what type to create
     receipt: ReceiptDto | null;
 }

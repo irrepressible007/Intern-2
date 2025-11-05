@@ -14,7 +14,7 @@ import {
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
-import { AttachReceiptDto } from './dto/attach-receipt.dto'; // <-- Import new DTO
+import { AttachReceiptDto } from './dto/attach-receipt.dto'; // <-- 1. Import new DTO
 import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
 import { QueryExpenseDto } from './dto/query-expense.dto';
@@ -43,13 +43,12 @@ export class ExpensesController {
    */
   @Put(':id/receipt')
   @ApiOperation({ summary: 'Attach or remove receipt metadata to/from an expense (User-Scoped)' })
-  @ApiBody({ type: AttachReceiptDto, description: 'Attach metadata by sending the object, or remove by sending { receipt: null }' })
+  @ApiBody({ type: AttachReceiptDto, description: 'Attach metadata by sending the object, or remove by sending { "receipt": null }' })
   attachReceipt(
     @Param('id', MongoIdPipe) id: string,
-    @Body() attachReceiptDto: AttachReceiptDto,
+    @Body() attachReceiptDto: AttachReceiptDto, // <-- 2. Use the new DTO
     @User() user: ReqUser,
   ) {
-    // This calls the new service method to update the receipt field
     return this.expensesService.attachReceipt(id, user.userId, attachReceiptDto);
   }
 
